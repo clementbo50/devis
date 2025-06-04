@@ -136,12 +136,55 @@ export async function generatePDF() {
     }
     y += 10;
 
+    // Note avant le tableau
+    const note = document.getElementById('note').value;
+    if (note) {
+        // Fond plus sombre pour la section objet
+        const noteBgColor = [240, 244, 250]; // bleu très clair
+        const noteBoxHeight = 14 + Math.ceil(note.length / 80) * 5; // hauteur dynamique selon le texte
+        doc.setFillColor(...noteBgColor);
+        doc.rect(margin, y - 2, pageWidth - 2 * margin, noteBoxHeight, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(26, 60, 109);
+        doc.text('Objet', margin + 2, y + 4);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(note, margin + 2, y + 9, { maxWidth: pageWidth - 2 * margin - 4 });
+        y += noteBoxHeight + 2;
+    }
+
     // Tableau (couvre toute la largeur)
     const availableWidth = pageWidth - 2 * margin; // 190mm
+    const dateFieldEnabled = document.getElementById('toggleDateField').checked;
+    let tableHead, tableBody, columnStyles;
+    if (dateFieldEnabled) {
+        tableHead = [['Description', 'Date', 'Qté', 'Unité', 'Prix unitaire', 'Total']];
+        tableBody = getTableData(true);
+        columnStyles = {
+            0: { cellWidth: availableWidth * 0.35 }, // Description: 35%
+            1: { cellWidth: availableWidth * 0.15 }, // Date: 15%
+            2: { cellWidth: availableWidth * 0.10 }, // Qté: 10%
+            3: { cellWidth: availableWidth * 0.15 }, // Unité: 15%
+            4: { cellWidth: availableWidth * 0.15 }, // Prix unitaire: 15%
+            5: { cellWidth: availableWidth * 0.10 }  // Total: 10%
+        };
+    } else {
+        tableHead = [['Description', 'Qté', 'Unité', 'Prix unitaire', 'Total']];
+        tableBody = getTableData(false);
+        columnStyles = {
+            0: { cellWidth: availableWidth * 0.40 }, // Description: 40%
+            1: { cellWidth: availableWidth * 0.13 }, // Qté: 13%
+            2: { cellWidth: availableWidth * 0.17 }, // Unité: 17%
+            3: { cellWidth: availableWidth * 0.17 }, // Prix unitaire: 17%
+            4: { cellWidth: availableWidth * 0.13 }  // Total: 13%
+        };
+    }
     doc.autoTable({
         startY: y,
-        head: [['Description', 'Date', 'Qté', 'Unité', 'Prix unitaire', 'Total']],
-        body: getTableData(),
+        head: tableHead,
+        body: tableBody,
         theme: 'grid',
         headStyles: {
             fillColor: [26, 60, 109],
@@ -155,14 +198,7 @@ export async function generatePDF() {
             font: 'helvetica',
             textColor: [0, 0, 0],
         },
-        columnStyles: {
-            0: { cellWidth: availableWidth * 0.35 }, // Description: 35%
-            1: { cellWidth: availableWidth * 0.15 }, // Date: 15%
-            2: { cellWidth: availableWidth * 0.10 }, // Qté: 10%
-            3: { cellWidth: availableWidth * 0.15 }, // Unité: 15%
-            4: { cellWidth: availableWidth * 0.15 }, // Prix unitaire: 15%
-            5: { cellWidth: availableWidth * 0.10 }  // Total: 10%
-        },
+        columnStyles: columnStyles,
         styles: {
             overflow: 'linebreak',
             cellPadding: 1,
@@ -170,10 +206,7 @@ export async function generatePDF() {
         margin: { top: margin, left: margin, right: margin },
         didDrawPage: (data) => {
             // Footer
-            const pageHeight = doc.internal.pageSize.getHeight();
-            doc.setFontSize(8);
-            doc.setTextColor(100);
-            doc.text(`${document.getElementById('companyName').value || 'N/A'} | ${document.getElementById('companySiret').value || 'N/A'}`, data.settings.margin.left, pageHeight - 10);
+            drawFooter(doc, pageWidth, margin);
         },
     });
 
@@ -191,30 +224,62 @@ export async function generatePDF() {
     const totalTVA = parseFloat(document.getElementById('totalTVA').textContent) || 0;
     const totalTTC = parseFloat(document.getElementById('totalTTC').textContent) || 0;
 
+    // Bloc résultat (carte bleue arrondie) - initialisation AVANT le calcul de la hauteur totale
+    const resultBoxWidth = 80;
+    const resultBoxHeight = companyTvaExempt ? 18 : 32;
+    const resultBoxX = pageWidth - margin - resultBoxWidth;
+    const conditions = document.getElementById('conditions').value;
+
+    // Calcul de la hauteur totale nécessaire pour le bloc final (résultat, mention, conditions, signature)
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let totalBlockHeight = resultBoxHeight + 4;
+    if (companyTvaExempt) totalBlockHeight += 10; // mention légale
+    let conditionsBoxHeight = 0;
+    if (conditions) {
+        conditionsBoxHeight = 14 + Math.ceil(conditions.length / 80) * 5 + 6;
+        totalBlockHeight += conditionsBoxHeight;
+    }
+    totalBlockHeight += 30 + 14; // espace + signature
+    if (y + totalBlockHeight > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+        drawFooter(doc, pageWidth, margin);
+    }
+
+    // Bloc résultat (carte bleue arrondie)
+    const resultBoxY = y;
+    doc.setFillColor(230, 238, 255); // bleu très clair
+    doc.roundedRect(resultBoxX, resultBoxY, resultBoxWidth, resultBoxHeight, 6, 6, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(26, 60, 109);
-    doc.text(`Total HT : ${totalHT.toFixed(2)} €`, pageWidth - margin, y, { align: 'right' });
-    y += 7;
-    doc.text(`TVA (${tvaRate}%) : ${totalTVA.toFixed(2)} €`, pageWidth - margin, y, { align: 'right' });
-    y += 7;
-    doc.text(`Total TTC : ${totalTTC.toFixed(2)} €`, pageWidth - margin, y, { align: 'right' });
-    y += 10;
+    let resultY = resultBoxY + 8;
+    if (companyTvaExempt) {
+        doc.text(`Total HT : ${totalHT.toFixed(2)} €`, resultBoxX + resultBoxWidth / 2, resultY, { align: 'center' });
+        resultY += 8;
+    } else {
+        doc.text(`Total HT : ${totalHT.toFixed(2)} €`, resultBoxX + resultBoxWidth / 2, resultY, { align: 'center' });
+        resultY += 8;
+        doc.text(`TVA (${tvaRate}%) : ${totalTVA.toFixed(2)} €`, resultBoxX + resultBoxWidth / 2, resultY, { align: 'center' });
+        resultY += 8;
+        doc.text(`Total TTC : ${totalTTC.toFixed(2)} €`, resultBoxX + resultBoxWidth / 2, resultY, { align: 'center' });
+        resultY += 8;
+    }
+    y += resultBoxHeight + 4;
 
-    if (tvaRate === 0) {
+    if (companyTvaExempt) {
         doc.setFont('helvetica', 'italic');
         doc.setFontSize(10);
         doc.setTextColor(80, 80, 80);
-        doc.text("TVA non applicable, art. 293B du CGI", pageWidth - margin, y, { align: 'right' });
-        y += 7;
+        doc.text("TVA non applicable, art. 293B du CGI", resultBoxX + resultBoxWidth, y, { align: 'right' });
+        y += 10;
     }
 
     // Conditions
-    const conditions = document.getElementById('conditions').value;
     if (conditions) {
-        doc.setDrawColor(212, 160, 23); // Couleur or
-        doc.setLineWidth(0.5);
-        doc.rect(margin, y - 2, pageWidth - 2 * margin, 15, 'S'); // Encadré
+        const noteBgColor = [240, 244, 250]; // bleu très clair
+        doc.setFillColor(...noteBgColor);
+        doc.rect(margin, y - 2, pageWidth - 2 * margin, conditionsBoxHeight, 'F');
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(26, 60, 109);
@@ -223,9 +288,29 @@ export async function generatePDF() {
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
         doc.text(conditions, margin + 2, y + 10, { maxWidth: pageWidth - 2 * margin - 4 });
+        y += conditionsBoxHeight;
     }
 
-   
+    // Zone de signature (fin du PDF)
+    y += 30; // grand espace avant la zone de signature
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 40);
+    const leftX = margin;
+    const rightX = pageWidth / 2 + 10;
+    const signatureText = "Signature du client (précédé de la mention « Bon pour accord »)";
+    doc.text(signatureText, rightX, y, { maxWidth: pageWidth / 2 - margin - 10 });
+    doc.text("Date de signature :", leftX, y);
 
     doc.save(`devis-${document.getElementById('quoteNumber').value || 'document'}.pdf`);
+}
+
+// Fonction utilitaire pour dessiner le footer sur chaque page
+function drawFooter(doc, pageWidth, margin) {
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(`${document.getElementById('companyLegalStatus').value} | ${document.getElementById('companyName').value || 'N/A'} | N° Siret : ${document.getElementById('companySiret').value || 'N/A'}`,
+        margin,
+        doc.internal.pageSize.getHeight() - 10
+    );
 }

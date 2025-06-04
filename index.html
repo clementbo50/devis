@@ -65,7 +65,6 @@
                 <input type="text" id="companyTva" placeholder="FRXX999999999">
                 <label class="checkbox-tva">
                     <input type="checkbox" id="companyTvaExempt">
-                    <span class="checkmark"></span>
                     Exonéré de TVA
                 </label>
             </div>
@@ -136,6 +135,14 @@
             </div>
         </div>
 
+        <label>
+            <input type="checkbox" id="toggleDateField" checked>
+            Activer le champ date
+        </label>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5em;">
+            <button class="btn btn-add" id="addRowBtn">Ajouter une ligne</button>
+        </div>
         <table id="itemsTable">
             <thead>
                 <tr>
@@ -176,7 +183,6 @@
             </div>
         </div>
 
-        <button class="btn btn-add" id="addRowBtn">Ajouter une ligne</button>
         <button class="btn" id="generatePdfBtn">Générer PDF</button>
     </div>
 
