@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Devis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <label for="logoInput" class="logo-label">Choisir un logo</label>
+                <input type="file" id="logoInput" accept="image/*">
+                <img id="logo" class="logo" src="" alt="Logo">
+            </div>
+            <div class="header-info">
+                <h1>Devis</h1>
+                <div class="form-group">
+                    <label for="quoteNumber">Numéro de devis</label>
+                    <input type="text" id="quoteNumber" placeholder="DEVIS-001" required>
+                </div>
+                <div class="form-group">
+                    <label for="quoteDate">Date d'émission</label>
+                    <input type="date" id="quoteDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="quoteValidUntil">Valide jusqu'à</label>
+                    <input type="date" id="quoteValidUntil" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="company-info">
+            <h2>Informations de l'entreprise</h2>
+            <div class="form-group">
+                <label for="companyLegalStatus">Statut juridique</label>
+                <input type="text" id="companyLegalStatus" placeholder="Ex : SARL, SAS, EI...">
+            </div>
+            <div class="form-group">
+                <label for="companyName">Nom de l'entreprise</label>
+                <input type="text" id="companyName" placeholder="Votre entreprise" required>
+            </div>
+            <div class="form-group">
+                <label for="companyLastname">Nom</label>
+                <input type="text" id="companyLastname" placeholder="Nom du représentant">
+            </div>
+            <div class="form-group">
+                <label for="companyFirstname">Prénom</label>
+                <input type="text" id="companyFirstname" placeholder="Prénom du représentant">
+            </div>
+            <div class="form-group">
+                <label for="companyAddress">Adresse</label>
+                <textarea id="companyAddress" placeholder="Adresse complète" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="companySiret">SIRET</label>
+                <input type="text" id="companySiret" placeholder="Numéro SIRET" required>
+            </div>
+            <div class="form-group">
+                <label for="companyTva">Numéro de TVA</label>
+                <input type="text" id="companyTva" placeholder="FRXX999999999">
+                <label class="checkbox-tva">
+                    <input type="checkbox" id="companyTvaExempt">
+                    <span class="checkmark"></span>
+                    Exonéré de TVA
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="companyEmail">Email</label>
+                <input type="email" id="companyEmail" placeholder="email@votreentreprise.com" required>
+            </div>
+            <div class="form-group">
+                <label for="companyPhone">Téléphone</label>
+                <input type="tel" id="companyPhone" placeholder="Téléphone">
+            </div>
+        </div>
+
+        <div class="note-section">
+            <div class="form-group">
+                <label for="note">Note</label>
+                <textarea id="note" placeholder="Note interne ou visible sur le devis"></textarea>
+            </div>
+        </div>
+
+        <div class="billing-section">
+            <h2>Facturation</h2>
+            <div class="form-group">
+                <label for="tvaType">TVA</label>
+                <select id="tvaType">
+                    <option value="20">TVA 20% (standard)</option>
+                    <option value="10">TVA 10% (rénovation, restauration...)</option>
+                    <option value="5.5">TVA 5,5% (alimentation, livres...)</option>
+                    <option value="0">TVA non applicable (auto-entrepreneur, art. 293B CGI)</option>
+                    <option value="custom">Autre taux</option>
+                </select>
+            </div>
+            <div class="form-group" id="customTvaGroup" style="display:none;">
+                <label for="customTva">Taux personnalisé (%)</label>
+                <input type="number" id="customTva" min="0" max="100" step="0.01" value="0">
+            </div>
+        </div>
+
+        <div class="client-info">
+            <h2>Informations du client</h2>
+            <div class="form-group">
+                <label for="clientType">Type de client</label>
+                <select id="clientType">
+                    <option value="particulier">Particulier</option>
+                    <option value="entreprise">Entreprise</option>
+                    <option value="public">Entité publique</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="clientName">Nom du client / Entité</label>
+                <input type="text" id="clientName" placeholder="Nom ou raison sociale" required>
+            </div>
+            <div class="form-group">
+                <label for="clientAddress">Adresse</label>
+                <textarea id="clientAddress" placeholder="Adresse complète" required></textarea>
+            </div>
+            <div class="form-group public-field" style="display: none;">
+                <label for="clientSiret">SIRET (pour entités publiques/entreprises)</label>
+                <input type="text" id="clientSiret" placeholder="Numéro SIRET">
+            </div>
+            <div class="form-group public-field" style="display: none;">
+                <label for="clientCodeApe">Code APE (pour entités publiques/entreprises)</label>
+                <input type="text" id="clientCodeApe" placeholder="Code APE">
+            </div>
+            <div class="form-group public-field" style="display: none;">
+                <label for="clientService">Service/Département (pour entités publiques)</label>
+                <input type="text" id="clientService" placeholder="Service ou département">
+            </div>
+        </div>
+
+        <table id="itemsTable">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Qté</th>
+                    <th>Unité</th>
+                    <th>Prix unitaire</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="item-description" placeholder="Description" ></td>
+                    <td><input type="date" class="item-date" ></td>
+                    <td><input type="number" class="item-qty" min="1" value="1" ></td>
+                    <td><input type="text" class="item-unit" placeholder="Unité" ></td>
+                    <td><input type="number" class="item-amount" min="0" step="0.01" value="0"></td>
+                    <td class="item-total">0.00</td>
+                    <td><button class="btn btn-delete">Supprimer</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total">
+            <div>Total HT : <span id="totalHT">0.00</span> €</div>
+            <div>TVA (<span id="tvaLabel">20%</span>) : <span id="totalTVA">0.00</span> €</div>
+            <div><strong>Total TTC : <span id="totalTTC">0.00</span> €</strong></div>
+            <div id="tvaMention" style="color:#888; font-size:0.95em; margin-top:4px;"></div>
+        </div>
+
+        <div class="conditions">
+            <h2>Conditions et notes</h2>
+            <div class="form-group">
+                <label for="conditions">Conditions générales ou notes</label>
+                <textarea id="conditions" placeholder="Ex. : Validité 30 jours, paiement à 30 jours, etc."></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-add" id="addRowBtn">Ajouter une ligne</button>
+        <button class="btn" id="generatePdfBtn">Générer PDF</button>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
