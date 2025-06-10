@@ -281,7 +281,7 @@ export async function generatePDF() {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(12);
         doc.setTextColor(26, 60, 109);
-        doc.text('Conditions générales et notes', margin + 2, y + 4);
+        doc.text('Modalités et remarques', margin + 2, y + 4);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
         doc.setTextColor(0, 0, 0);
