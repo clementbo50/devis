@@ -49,7 +49,7 @@ export async function generatePDF() {
     const companyInfoX = margin;
     doc.setFontSize(14);
     doc.setTextColor(26, 60, 109);
-    doc.text('Émetteur', companyInfoX, y);
+    //doc.text('Émetteur', companyInfoX, y);
     doc.setLineWidth(0.5);
     doc.line(companyInfoX, y + 2, companyInfoX + 60, y + 2);
     y += 7;
@@ -87,10 +87,8 @@ export async function generatePDF() {
         doc.text(`SIRET: ${companySiret}`, companyInfoX, y);
         y += 7;
     }
-    if (companyTvaExempt) {
-        doc.text('Exonéré de TVA', companyInfoX, y);
-        y += 7;
-    } else if (companyTva) {
+    
+    if (companyTva) {
         doc.text(`TVA : ${companyTva}`, companyInfoX, y);
         y += 7;
     }
@@ -109,7 +107,7 @@ export async function generatePDF() {
     const clientInfoX = pageWidth - margin - 80; // Alignement à droite avec 80mm de largeur max
     doc.setFontSize(14);
     doc.setTextColor(26, 60, 109);
-    doc.text('Pour', clientInfoX, y);
+    //doc.text('Pour', clientInfoX, y);
     doc.line(clientInfoX, y + 2, clientInfoX + 60, y + 2);
     y += 7;
     doc.setFontSize(10);
@@ -225,14 +223,14 @@ export async function generatePDF() {
     const totalTTC = parseFloat(document.getElementById('totalTTC').textContent) || 0;
 
     // Bloc résultat (carte bleue arrondie) - initialisation AVANT le calcul de la hauteur totale
-    const resultBoxWidth = 80;
-    const resultBoxHeight = companyTvaExempt ? 18 : 32;
+    const resultBoxWidth = 60;
+    const resultBoxHeight = companyTvaExempt ? 14 : 24;
     const resultBoxX = pageWidth - margin - resultBoxWidth;
     const conditions = document.getElementById('conditions').value;
 
     // Calcul de la hauteur totale nécessaire pour le bloc final (résultat, mention, conditions, signature)
     const pageHeight = doc.internal.pageSize.getHeight();
-    let totalBlockHeight = resultBoxHeight + 4;
+    let totalBlockHeight = resultBoxHeight + 8;
     if (companyTvaExempt) totalBlockHeight += 10; // mention légale
     let conditionsBoxHeight = 0;
     if (conditions) {
@@ -246,14 +244,14 @@ export async function generatePDF() {
         drawFooter(doc, pageWidth, margin);
     }
 
-    // Bloc résultat (carte bleue arrondie)
+    // Bloc résultat (carte bleue carrée)
     const resultBoxY = y;
     doc.setFillColor(230, 238, 255); // bleu très clair
-    doc.roundedRect(resultBoxX, resultBoxY, resultBoxWidth, resultBoxHeight, 6, 6, 'F');
+    doc.rect(resultBoxX, resultBoxY, resultBoxWidth, resultBoxHeight, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(26, 60, 109);
-    let resultY = resultBoxY + 8;
+    let resultY = resultBoxY + 6;
     if (companyTvaExempt) {
         doc.text(`Total HT : ${totalHT.toFixed(2)} €`, resultBoxX + resultBoxWidth / 2, resultY, { align: 'center' });
         resultY += 8;
