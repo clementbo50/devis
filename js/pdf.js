@@ -41,8 +41,13 @@ export async function generatePDF() {
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     doc.text(`Numéro: ${document.getElementById('quoteNumber').value}`, pageWidth - margin - 50, y + 7);
-    doc.text(`Date d'émission: ${document.getElementById('quoteDate').value}`, pageWidth - margin - 50, y + 12);
-    doc.text(`Valide jusqu'au: ${document.getElementById('quoteValidUntil').value}`, pageWidth - margin - 50, y + 17);
+    
+    // Formatage des dates
+    const quoteDate = formatDateToFrench(document.getElementById('quoteDate').value);
+    const quoteValidUntil = formatDateToFrench(document.getElementById('quoteValidUntil').value);
+
+    doc.text(`Date d'émission: ${quoteDate}`, pageWidth - margin - 50, y + 12);
+    doc.text(`Valide jusqu'au: ${quoteValidUntil}`, pageWidth - margin - 50, y + 17);
     y += 25;
 
     // Info entreprise (à gauche)
@@ -311,4 +316,10 @@ function drawFooter(doc, pageWidth, margin) {
         margin,
         doc.internal.pageSize.getHeight() - 10
     );
+}
+
+function formatDateToFrench(dateString) {
+    const date = new Date(dateString);
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('fr-FR', options);
 }
