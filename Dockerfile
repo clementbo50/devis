@@ -11,13 +11,15 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 RUN composer install --no-dev --optimize-autoloader
 
 COPY . /var/www/html
 
-RUN chmod -R 755 /var/www/html \
+RUN mkdir -p /var/www/html/public/assets/uploads \
+    && chown -R www-data:www-data /var/www/html/public/assets/uploads \
+    && chmod -R 755 /var/www/html \
     && chmod -R 775 /var/www/html/public/assets/uploads
 
 EXPOSE 9000
