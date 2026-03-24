@@ -1,0 +1,63 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: devis_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+    networks:
+      - devis_network
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devis_php
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - devis_network
+    command: php-fpm
+
+  mysql:
+    image: mysql:8.0
+    container_name: devis_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: devis
+      MYSQL_USER: devis_user
+      MYSQL_PASSWORD: dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - devis_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: devis_phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: dev
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - devis_network
+
+networks:
+  devis_network:
+    driver: bridge
+
+volumes:
+  mysql_data:

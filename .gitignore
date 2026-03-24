@@ -1,0 +1,66 @@
+composer.lock
+vendor/
+public/assets/uploads
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+/logs/
+
+# Cache
+/cache/
+/tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.settings/
+nbproject/
+
+# PHPUnit
+.phpunit.result.cache
+/coverage/
+
+# PHP CS Fixer
+.php-cs-fixer.cache
+.php_cs.cache
+
+# PHPStan
+.phpstan/
+
+# Uploads (user-generated content)
+/uploads/
+/public/uploads/
+
+# Node (if using frontend tools)
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+
+# Build output
+/dist/
+/build/
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+"""
+
+with open(".gitignore", "w") as f:
+    f.write(content)
+
+print(".gitignore created successfully.")
